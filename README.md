@@ -65,7 +65,7 @@ Abra `http://localhost:4200`.
 
 ## Acesso de demonstração
 
-O banco novo cria o usuário de demonstração `admin` com a senha `Temp123!`. O segundo fator usa TOTP e deve ser configurado apenas para testes locais. Troque as credenciais e o segredo TOTP antes de qualquer uso fora do ambiente de demonstração.
+O banco novo cria o usuário de demonstração `admin` com a senha `Temp123!`. O segundo fator usa TOTP e deve ser configurado apenas para testes locais. Realizar a troca de credenciais e o segredo TOTP para cada ambiente de testes diferente.
 
 ## Testes automatizados
 
@@ -86,9 +86,6 @@ A suíte usa bancos SQLite temporários e cobre:
 ## Segurança e publicação
 
 - `KORP_ENCRYPTION_KEY` é obrigatória e não possui valor padrão no código.
-- Nunca publique chaves, senhas reais, bancos SQLite, arquivos `.env` ou dados de usuários.
-- Em produção, forneça a chave de criptografia por variável de ambiente ou cofre de segredos.
-- Antes de publicar, revise `git status` e confirme que arquivos sensíveis não estão preparados para commit.
 
 ## Portas locais
 
