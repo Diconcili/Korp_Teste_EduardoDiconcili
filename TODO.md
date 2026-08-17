@@ -3,7 +3,7 @@
 ## Entrega
 
 - [ ] Preparar vídeo de apresentação e detalhamento técnico final: ciclo de vida Angular, RxJS, bibliotecas, LINQ, exceções e segurança.
-- [ ] Criar repositório público com o nome `Korp_Teste_SeuNome` e publicar o material de entrega.
+
 
 ## Concluído
 
@@ -22,3 +22,4 @@
 - [x] Implementar sessão de 30 minutos, persistência controlada no navegador e logout com invalidação do token no serviço.
 - [x] Migrar a interface para Angular Material, aplicar Manrope e separar os fluxos em menu, produtos, nova nota e notas fiscais.
 - [x] Criar testes automatizados de integração para saldo insuficiente, concorrência, idempotência e indisponibilidade do serviço de estoque.
+- [X] Criar repositório público com o nome `Korp_Teste_EduardoDiconcili` e publicar o material de entrega.
