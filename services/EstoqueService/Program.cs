@@ -17,7 +17,13 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 app.UseCors();
-using (var scope = app.Services.CreateScope()) await scope.ServiceProvider.GetRequiredService<StockDb>().Database.EnsureCreatedAsync();
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<StockDb>();
+    await db.Database.EnsureCreatedAsync();
+    await db.Database.ExecuteSqlRawAsync("CREATE TABLE IF NOT EXISTS StockConsumptions (Id INTEGER NOT NULL CONSTRAINT PK_StockConsumptions PRIMARY KEY AUTOINCREMENT, OperationId TEXT NOT NULL, CreatedAt TEXT NOT NULL)");
+    await db.Database.ExecuteSqlRawAsync("CREATE UNIQUE INDEX IF NOT EXISTS IX_StockConsumptions_OperationId ON StockConsumptions (OperationId)");
+}
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "estoque" }));
 app.MapGet("/api/products", async (StockDb db) => await db.Products.OrderBy(product => product.Code).ToListAsync());

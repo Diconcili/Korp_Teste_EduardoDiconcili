@@ -8,12 +8,14 @@ namespace Korp.IntegrationTests;
 
 public class InvoiceServiceTests
 {
+    const string TestEncryptionKey = "chave-exclusiva-para-testes-automatizados-korp-2026";
+
     [Fact]
     public async Task CreateAsync_WithTheSameIdempotencyKey_CreatesOnlyOneInvoice()
     {
         using var database = await CreateDatabaseAsync();
         await using var db = new BillingDb(database.Options);
-        var service = new InvoiceService(db, new CryptoService(), new FakeHttpClientFactory(new HttpClient()));
+        var service = new InvoiceService(db, new CryptoService(TestEncryptionKey), new FakeHttpClientFactory(new HttpClient()));
         var request = new CreateInvoice([new InvoiceItem(1, 2)], "same-request");
 
         var first = await service.CreateAsync(request);
@@ -31,7 +33,7 @@ public class InvoiceServiceTests
         using var database = await CreateDatabaseAsync();
         await using var db = new BillingDb(database.Options);
         var client = new HttpClient(new ThrowingHandler()) { BaseAddress = new Uri("http://stock") };
-        var service = new InvoiceService(db, new CryptoService(), new FakeHttpClientFactory(client));
+        var service = new InvoiceService(db, new CryptoService(TestEncryptionKey), new FakeHttpClientFactory(client));
         var invoice = await service.CreateAsync(new CreateInvoice([new InvoiceItem(1, 1)], "outage-request"));
 
         var result = await service.PrintAsync(invoice.Invoice.Number);
@@ -39,6 +41,9 @@ public class InvoiceServiceTests
         Assert.False(result.Success);
         Assert.Equal(503, result.StatusCode);
         Assert.Equal("Aberta", await db.Invoices.Where(item => item.Number == invoice.Invoice.Number).Select(item => item.Status).SingleAsync());
+        var recovery = await db.StockRecoveryJobs.SingleAsync(item => item.InvoiceNumber == invoice.Invoice.Number);
+        Assert.Equal(1, recovery.AttemptCount);
+        Assert.True(recovery.NextAttemptAt > DateTime.UtcNow);
     }
 
     static async Task<TestBillingDatabase> CreateDatabaseAsync()

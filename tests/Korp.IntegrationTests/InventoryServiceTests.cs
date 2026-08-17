@@ -36,6 +36,22 @@ public class InventoryServiceTests
         Assert.Equal(0, await verificationDb.Products.Where(product => product.Id == 1).Select(product => product.Balance).SingleAsync());
     }
 
+    [Fact]
+    public async Task ConsumeAsync_WithTheSameOperationId_DeductsStockOnlyOnce()
+    {
+        using var database = await CreateDatabaseAsync(2);
+        await using var db = new StockDb(database.Options);
+        var service = new InventoryService(db);
+
+        var first = await service.ConsumeAsync(new ConsumeStock([new StockItem(1, 1)], "invoice-1"));
+        var repeated = await service.ConsumeAsync(new ConsumeStock([new StockItem(1, 1)], "invoice-1"));
+
+        Assert.True(first.Success);
+        Assert.True(repeated.Success);
+        Assert.Equal(1, await db.Products.Where(product => product.Id == 1).Select(product => product.Balance).SingleAsync());
+        Assert.Equal(1, await db.StockConsumptions.CountAsync());
+    }
+
     static async Task<TestStockDatabase> CreateDatabaseAsync(int balance)
     {
         var path = Path.Combine(Path.GetTempPath(), $"korp-stock-{Guid.NewGuid():N}.db");

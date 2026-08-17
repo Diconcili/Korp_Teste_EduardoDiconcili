@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/services/">
+    <Project Path="services/EstoqueService/EstoqueService.csproj" />
+    <Project Path="services/FaturamentoService/FaturamentoService.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Korp.IntegrationTests/Korp.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

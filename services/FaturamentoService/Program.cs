@@ -10,12 +10,16 @@ Directory.CreateDirectory(dataDirectory);
 var databasePath = Path.Combine(dataDirectory, "faturamento.db");
 var legacyDatabasePath = Path.Combine(builder.Environment.ContentRootPath, "faturamento.db");
 if (!File.Exists(databasePath) && File.Exists(legacyDatabasePath)) File.Move(legacyDatabasePath, databasePath);
+var encryptionSecret = Environment.GetEnvironmentVariable("KORP_ENCRYPTION_KEY");
+if (string.IsNullOrWhiteSpace(encryptionSecret) || encryptionSecret.Length < 32)
+    throw new InvalidOperationException("Defina KORP_ENCRYPTION_KEY com ao menos 32 caracteres antes de iniciar o FaturamentoService.");
 
 builder.Services.AddDbContext<BillingDb>(options => options.UseSqlite($"Data Source={databasePath}"));
 builder.Services.AddHttpClient("stock", client => client.BaseAddress = new Uri(builder.Configuration["StockServiceUrl"] ?? "http://localhost:5101"));
 builder.Services.AddScoped<InvoiceService>();
+builder.Services.AddHostedService<StockRecoveryWorker>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
-builder.Services.AddSingleton<CryptoService>();
+builder.Services.AddSingleton(new CryptoService(encryptionSecret));
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -24,6 +28,8 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BillingDb>();
     await db.Database.EnsureCreatedAsync();
+    await db.Database.ExecuteSqlRawAsync("CREATE TABLE IF NOT EXISTS StockRecoveryJobs (Id INTEGER NOT NULL CONSTRAINT PK_StockRecoveryJobs PRIMARY KEY AUTOINCREMENT, InvoiceNumber INTEGER NOT NULL, AttemptCount INTEGER NOT NULL, NextAttemptAt TEXT NOT NULL, LastError TEXT NOT NULL, CreatedAt TEXT NOT NULL)");
+    await db.Database.ExecuteSqlRawAsync("CREATE UNIQUE INDEX IF NOT EXISTS IX_StockRecoveryJobs_InvoiceNumber ON StockRecoveryJobs (InvoiceNumber)");
     if (!await db.Users.AnyAsync())
     {
         var salt = RandomNumberGenerator.GetBytes(16);
