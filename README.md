@@ -8,6 +8,7 @@ Aplicação full stack para cadastro de produtos, criação de notas fiscais e c
 - Atualização de saldo ao cadastrar novamente o mesmo código e descrição.
 - Prevenção de códigos ou descrições duplicados com dados divergentes.
 - Criação de notas abertas com múltiplos itens.
+- Consulta paginada de notas, com até 50 registros por requisição.
 - Fechamento de notas com baixa atômica de estoque, sem permitir saldo negativo.
 - Consulta expansível dos itens de cada nota e impressão pelo navegador após o fechamento.
 - Retentativas automáticas com backoff quando o serviço de estoque estiver indisponível.
@@ -21,7 +22,7 @@ Aplicação full stack para cadastro de produtos, criação de notas fiscais e c
 
 | Componente | Tecnologia | Responsabilidade |
 |---|---|---|
-| Frontend | Angular 19 e Angular Material | Interface, autenticação, produtos, notas e impressão |
+| Frontend | Angular 19 e Angular Material | Interface e orquestração de serviços dedicados a sessão, estoque, notas e impressão |
 | EstoqueService | ASP.NET Core | Produtos, saldo e consumo transacional do estoque |
 | FaturamentoService | ASP.NET Core | MFA, sessões, notas criptografadas e fila de recuperação |
 | Persistência | SQLite | Bancos locais separados para estoque e faturamento |
@@ -156,6 +157,7 @@ A suíte usa bancos SQLite temporários e cobre:
 - Saldo insuficiente sem alteração do estoque;
 - Concorrência na disputa pela última unidade;
 - Idempotência na criação de notas;
+- Paginação das notas em ordem decrescente;
 - Indisponibilidade do EstoqueService e agendamento de recuperação;
 - Idempotência da baixa de estoque;
 - Rejeição de consumo sem itens;

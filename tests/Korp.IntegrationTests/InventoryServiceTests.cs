@@ -78,6 +78,13 @@ public class InventoryServiceTests
     sealed class TestStockDatabase(DbContextOptions<StockDb> options, string path) : IDisposable
     {
         public DbContextOptions<StockDb> Options { get; } = options;
-        public void Dispose() { try { if (File.Exists(path)) File.Delete(path); } catch (IOException) { } }
+        public void Dispose()
+        {
+            try
+            {
+                if (File.Exists(path)) File.Delete(path);
+            }
+            catch (IOException) { }
+        }
     }
 }

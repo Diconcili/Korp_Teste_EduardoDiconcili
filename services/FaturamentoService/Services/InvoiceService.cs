@@ -6,6 +6,19 @@ namespace FaturamentoService.Services;
 
 public class InvoiceService(BillingDb db, CryptoService crypto, IHttpClientFactory httpClientFactory)
 {
+    public async Task<PagedResult<InvoiceView>> ListAsync(int page, int pageSize)
+    {
+        var total = await db.Invoices.CountAsync();
+        var payloads = await db.Invoices.AsNoTracking()
+            .OrderByDescending(invoice => invoice.Number)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(invoice => invoice.EncryptedPayload)
+            .ToListAsync();
+        var items = payloads.Select(payload => crypto.Decrypt<InvoiceView>(payload)!).ToList();
+        return new(items, total, page, pageSize);
+    }
+
     public async Task<InvoiceCreationResult> CreateAsync(CreateInvoice input)
     {
         var items = input.Items ?? throw new ArgumentException("A nota deve possuir itens.", nameof(input));

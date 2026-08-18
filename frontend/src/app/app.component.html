@@ -1,64 +1,411 @@
 <main>
   <header>
     <div><strong>KORP</strong><span>Notas fiscais</span></div>
-    <mat-chip-set><mat-chip [class.session-active]="token">{{ token ? 'Sessão MFA ativa' : 'Acesso protegido por MFA' }}</mat-chip></mat-chip-set>
+    <mat-chip-set
+      ><mat-chip [class.session-active]="token">{{
+        token ? "Sessão MFA ativa" : "Acesso protegido por MFA"
+      }}</mat-chip></mat-chip-set
+    >
   </header>
 
   @if (!token) {
     <mat-card class="login">
-      <mat-card-header><mat-card-title>Acesso seguro</mat-card-title><mat-card-subtitle>Entre com sua conta e confirme o segundo fator.</mat-card-subtitle></mat-card-header>
+      <mat-card-header
+        ><mat-card-title>Acesso seguro</mat-card-title
+        ><mat-card-subtitle
+          >Entre com sua conta e confirme o segundo fator.</mat-card-subtitle
+        ></mat-card-header
+      >
       <mat-card-content>
-        <mat-form-field appearance="outline"><mat-label>Usuário</mat-label><input matInput [(ngModel)]="username"></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Senha</mat-label><input matInput [(ngModel)]="password" type="password"></mat-form-field>
-        @if (challenge) { <mat-form-field appearance="outline"><mat-label>Código do autenticador</mat-label><input matInput [(ngModel)]="code" inputmode="numeric"></mat-form-field> }
+        <mat-form-field appearance="outline"
+          ><mat-label>Usuário</mat-label><input matInput [(ngModel)]="username"
+        /></mat-form-field>
+        <mat-form-field appearance="outline"
+          ><mat-label>Senha</mat-label
+          ><input matInput [(ngModel)]="password" type="password"
+        /></mat-form-field>
+        @if (challenge) {
+          <mat-form-field appearance="outline"
+            ><mat-label>Código do autenticador</mat-label
+            ><input matInput [(ngModel)]="code" inputmode="numeric"
+          /></mat-form-field>
+        }
       </mat-card-content>
-      <mat-card-actions align="end"><button mat-flat-button color="primary" (click)="challenge ? validateMfa() : login()">{{ challenge ? 'Validar MFA' : 'Continuar' }}</button></mat-card-actions>
+      <mat-card-actions align="end"
+        ><button
+          mat-flat-button
+          color="primary"
+          (click)="challenge ? validateMfa() : login()"
+        >
+          {{ challenge ? "Validar MFA" : "Continuar" }}
+        </button></mat-card-actions
+      >
     </mat-card>
   } @else {
-    @if (activePanel === 'menu') {
+    @if (activePanel === "menu") {
       <section class="menu" aria-labelledby="menu-title">
         <h1 id="menu-title">O que você deseja fazer?</h1>
         <div class="menu-options">
-          <mat-card class="menu-option"><mat-card-header><mat-card-title>Produtos</mat-card-title><mat-card-subtitle>Cadastre produtos e acompanhe o saldo em estoque.</mat-card-subtitle></mat-card-header>@if (outOfStockProducts.length) { <div class="restock-alert" role="status"><strong>Produtos que precisam de reposição</strong><ul>@for (product of outOfStockProducts; track product.id) { <li>{{ product.description }}</li> }</ul></div> }<mat-card-actions align="end"><button mat-flat-button color="primary" (click)="activePanel = 'products'">Abrir produtos</button></mat-card-actions></mat-card>
-          <mat-card class="menu-option"><mat-card-header><mat-card-title>Nova nota fiscal</mat-card-title><mat-card-subtitle>Adicione itens e crie uma nova nota em aberto.</mat-card-subtitle></mat-card-header><mat-card-actions align="end"><button mat-flat-button color="primary" (click)="activePanel = 'new-invoice'">Criar nota</button></mat-card-actions></mat-card>
-          <mat-card class="menu-option"><mat-card-header><mat-card-title>Notas fiscais</mat-card-title><mat-card-subtitle>Consulte, imprima e feche as notas já criadas.</mat-card-subtitle></mat-card-header><mat-card-actions align="end"><button mat-flat-button color="primary" (click)="activePanel = 'invoices'">Ver notas</button></mat-card-actions></mat-card>
+          <mat-card class="menu-option"
+            ><mat-card-header
+              ><mat-card-title>Produtos</mat-card-title
+              ><mat-card-subtitle
+                >Cadastre produtos e acompanhe o saldo em
+                estoque.</mat-card-subtitle
+              ></mat-card-header
+            >
+            @if (outOfStockProducts.length) {
+              <div class="restock-alert" role="status">
+                <strong>Produtos que precisam de reposição</strong>
+                <ul>
+                  @for (product of outOfStockProducts; track product.id) {
+                    <li>{{ product.description }}</li>
+                  }
+                </ul>
+              </div>
+            }
+            <mat-card-actions align="end"
+              ><button
+                mat-flat-button
+                color="primary"
+                (click)="activePanel = 'products'"
+              >
+                Abrir produtos
+              </button></mat-card-actions
+            ></mat-card
+          >
+          <mat-card class="menu-option"
+            ><mat-card-header
+              ><mat-card-title>Nova nota fiscal</mat-card-title
+              ><mat-card-subtitle
+                >Adicione itens e crie uma nova nota em
+                aberto.</mat-card-subtitle
+              ></mat-card-header
+            ><mat-card-actions align="end"
+              ><button
+                mat-flat-button
+                color="primary"
+                (click)="activePanel = 'new-invoice'"
+              >
+                Criar nota
+              </button></mat-card-actions
+            ></mat-card
+          >
+          <mat-card class="menu-option"
+            ><mat-card-header
+              ><mat-card-title>Notas fiscais</mat-card-title
+              ><mat-card-subtitle
+                >Consulte, imprima e feche as notas já
+                criadas.</mat-card-subtitle
+              ></mat-card-header
+            ><mat-card-actions align="end"
+              ><button
+                mat-flat-button
+                color="primary"
+                (click)="activePanel = 'invoices'"
+              >
+                Ver notas
+              </button></mat-card-actions
+            ></mat-card
+          >
         </div>
-        <div class="logout-action"><button mat-stroked-button color="warn" type="button" (click)="logout()">Desconectar</button></div>
+        <div class="logout-action">
+          <button
+            mat-stroked-button
+            color="warn"
+            type="button"
+            (click)="logout()"
+          >
+            Desconectar
+          </button>
+        </div>
       </section>
     } @else {
-      <button class="back-button" mat-stroked-button color="primary" type="button" (click)="activePanel = 'menu'">Voltar ao menu</button>
+      <button
+        class="back-button"
+        mat-stroked-button
+        color="primary"
+        type="button"
+        (click)="activePanel = 'menu'"
+      >
+        Voltar ao menu
+      </button>
 
-      @if (activePanel === 'products') {
-        <mat-card class="panel"><mat-card-header><mat-card-title>Produtos</mat-card-title><mat-card-subtitle>Cadastre produtos e acompanhe os saldos disponíveis.</mat-card-subtitle></mat-card-header><mat-card-content>
-          <div class="form">
-            <mat-form-field appearance="outline" [class.invalid-field]="productCodeInvalid"><mat-label>Código</mat-label><input matInput [(ngModel)]="product.code" (ngModelChange)="sanitizeProductCode($event)" inputmode="numeric" pattern="[0-9]*"></mat-form-field>
-            <mat-form-field appearance="outline" [class.invalid-field]="productDescriptionInvalid"><mat-label>Descrição</mat-label><input matInput [(ngModel)]="product.description" (ngModelChange)="sanitizeProductDescription($event)"></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Saldo</mat-label><input matInput [(ngModel)]="product.balance" type="number" min="1"></mat-form-field>
-            <button mat-flat-button color="primary" (click)="addProduct()">Cadastrar produto</button>
-          </div>
-          <table><tr><th>Código</th><th>Descrição</th><th>Saldo</th></tr>@for (product of products; track product.id) { <tr><td>{{product.code}}</td><td>{{product.description}}</td><td [class]="stockBalanceClass(product.balance)">{{product.balance}}</td></tr> }</table>
-        </mat-card-content></mat-card>
+      @if (activePanel === "products") {
+        <mat-card class="panel"
+          ><mat-card-header
+            ><mat-card-title>Produtos</mat-card-title
+            ><mat-card-subtitle
+              >Cadastre produtos e acompanhe os saldos
+              disponíveis.</mat-card-subtitle
+            ></mat-card-header
+          ><mat-card-content>
+            <div class="form">
+              <mat-form-field
+                appearance="outline"
+                [class.invalid-field]="productCodeInvalid"
+                ><mat-label>Código</mat-label
+                ><input
+                  matInput
+                  [(ngModel)]="product.code"
+                  (ngModelChange)="sanitizeProductCode($event)"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+              /></mat-form-field>
+              <mat-form-field
+                appearance="outline"
+                [class.invalid-field]="productDescriptionInvalid"
+                ><mat-label>Descrição</mat-label
+                ><input
+                  matInput
+                  [(ngModel)]="product.description"
+                  (ngModelChange)="sanitizeProductDescription($event)"
+              /></mat-form-field>
+              <mat-form-field appearance="outline"
+                ><mat-label>Saldo</mat-label
+                ><input
+                  matInput
+                  [(ngModel)]="product.balance"
+                  type="number"
+                  min="1"
+              /></mat-form-field>
+              <button mat-flat-button color="primary" (click)="addProduct()">
+                Cadastrar produto
+              </button>
+            </div>
+            <table>
+              <tr>
+                <th>Código</th>
+                <th>Descrição</th>
+                <th>Saldo</th>
+              </tr>
+              @for (product of products; track product.id) {
+                <tr>
+                  <td>{{ product.code }}</td>
+                  <td>{{ product.description }}</td>
+                  <td [class]="stockBalanceClass(product.balance)">
+                    {{ product.balance }}
+                  </td>
+                </tr>
+              }
+            </table>
+          </mat-card-content></mat-card
+        >
       }
 
-      @if (activePanel === 'new-invoice') {
-        <mat-card class="panel"><mat-card-header><mat-card-title>Nova nota fiscal</mat-card-title><mat-card-subtitle>Monte a lista de itens antes de criar a nota.</mat-card-subtitle></mat-card-header><mat-card-content>
-          <div class="form">
-            <mat-form-field appearance="outline"><mat-label>Produto</mat-label><mat-select [(ngModel)]="selectedId"><mat-option [value]="0">Selecione um produto</mat-option>@for (product of availableProducts; track product.id) { <mat-option [value]="product.id">{{product.description}} ({{product.balance}})</mat-option> }</mat-select></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Quantidade</mat-label><input matInput [(ngModel)]="quantity" type="number" min="1"></mat-form-field>
-            <button mat-stroked-button color="primary" (click)="addItem()">Adicionar item</button>
-          </div>
-          @if (items.length) { <div class="draft-list"><h3>Itens adicionados</h3><table><tr><th>Produto</th><th>Quantidade</th><th></th></tr>@for (item of items; track item.productId) { <tr><td>{{productName(item.productId)}}</td><td>{{item.quantity}}</td><td><button mat-button color="warn" (click)="removeItem(item.productId)">Remover</button></td></tr> }</table></div> } @else { <p class="empty">Adicione ao menos um produto à nota.</p> }
-        </mat-card-content><mat-card-actions align="end"><button mat-flat-button color="primary" [disabled]="!items.length" (click)="createInvoice()">Criar nota aberta</button></mat-card-actions></mat-card>
+      @if (activePanel === "new-invoice") {
+        <mat-card class="panel"
+          ><mat-card-header
+            ><mat-card-title>Nova nota fiscal</mat-card-title
+            ><mat-card-subtitle
+              >Monte a lista de itens antes de criar a nota.</mat-card-subtitle
+            ></mat-card-header
+          ><mat-card-content>
+            <div class="form">
+              <mat-form-field appearance="outline"
+                ><mat-label>Produto</mat-label
+                ><mat-select [(ngModel)]="selectedId"
+                  ><mat-option [value]="0">Selecione um produto</mat-option>
+                  @for (product of availableProducts; track product.id) {
+                    <mat-option [value]="product.id"
+                      >{{ product.description }} ({{
+                        product.balance
+                      }})</mat-option
+                    >
+                  }
+                </mat-select></mat-form-field
+              >
+              <mat-form-field appearance="outline"
+                ><mat-label>Quantidade</mat-label
+                ><input matInput [(ngModel)]="quantity" type="number" min="1"
+              /></mat-form-field>
+              <button mat-stroked-button color="primary" (click)="addItem()">
+                Adicionar item
+              </button>
+            </div>
+            @if (items.length) {
+              <div class="draft-list">
+                <h3>Itens adicionados</h3>
+                <table>
+                  <tr>
+                    <th>Produto</th>
+                    <th>Quantidade</th>
+                    <th></th>
+                  </tr>
+                  @for (item of items; track item.productId) {
+                    <tr>
+                      <td>{{ productName(item.productId) }}</td>
+                      <td>{{ item.quantity }}</td>
+                      <td>
+                        <button
+                          mat-button
+                          color="warn"
+                          (click)="removeItem(item.productId)"
+                        >
+                          Remover
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </table>
+              </div>
+            } @else {
+              <p class="empty">Adicione ao menos um produto à nota.</p>
+            }</mat-card-content
+          ><mat-card-actions align="end"
+            ><button
+              mat-flat-button
+              color="primary"
+              [disabled]="!items.length"
+              (click)="createInvoice()"
+            >
+              Criar nota aberta
+            </button></mat-card-actions
+          ></mat-card
+        >
       }
 
-      @if (activePanel === 'invoices') {
-        <mat-card class="panel invoices"><mat-card-header><mat-card-title>Notas fiscais</mat-card-title><mat-card-subtitle>Clique em uma nota para visualizar seus itens.</mat-card-subtitle></mat-card-header><mat-card-content>
-          <table><tr><th>Número</th><th>Status</th><th>Itens</th><th>Ação</th></tr>@for (invoice of invoices; track invoice.number) { <tr class="invoice-row" (click)="toggleInvoice(invoice.number)"><td>#{{invoice.number}} <span class="expand">{{ expandedInvoiceNumber === invoice.number ? '▴' : '▾' }}</span></td><td><mat-chip-set><mat-chip [class.closed]="invoice.status === 'Fechada'">{{invoice.status}}</mat-chip></mat-chip-set></td><td>{{invoice.items.length}}</td><td><button mat-stroked-button color="primary" [disabled]="processing" (click)="$event.stopPropagation(); invoiceAction(invoice)">{{ processing && invoice.status === 'Aberta' ? 'Processando...' : invoice.status === 'Aberta' ? 'Fechar nota' : 'Imprimir nota' }}</button></td></tr>@if (expandedInvoiceNumber === invoice.number) { <tr class="invoice-details"><td colspan="4"><h3>Itens da nota #{{invoice.number}}</h3><table><tr><th>Produto</th><th>Quantidade</th></tr>@for (item of invoice.items; track item.productId) { <tr><td>{{productName(item.productId)}}</td><td>{{item.quantity}}</td></tr> }</table></td></tr> } }</table>
-        </mat-card-content></mat-card>
+      @if (activePanel === "invoices") {
+        <mat-card class="panel invoices"
+          ><mat-card-header
+            ><mat-card-title>Notas fiscais</mat-card-title
+            ><mat-card-subtitle
+              >Clique em uma nota para visualizar seus itens.</mat-card-subtitle
+            ></mat-card-header
+          ><mat-card-content>
+            <table>
+              <tr>
+                <th>Número</th>
+                <th>Status</th>
+                <th>Itens</th>
+                <th>Ação</th>
+              </tr>
+              @for (invoice of invoices; track invoice.number) {
+                <tr class="invoice-row" (click)="toggleInvoice(invoice.number)">
+                  <td>
+                    #{{ invoice.number }}
+                    <span class="expand">{{
+                      expandedInvoiceNumber === invoice.number ? "▴" : "▾"
+                    }}</span>
+                  </td>
+                  <td>
+                    <mat-chip-set
+                      ><mat-chip
+                        [class.closed]="invoice.status === 'Fechada'"
+                        >{{ invoice.status }}</mat-chip
+                      ></mat-chip-set
+                    >
+                  </td>
+                  <td>{{ invoice.items.length }}</td>
+                  <td>
+                    <button
+                      mat-stroked-button
+                      color="primary"
+                      [disabled]="processing"
+                      (click)="$event.stopPropagation(); invoiceAction(invoice)"
+                    >
+                      {{
+                        processing && invoice.status === "Aberta"
+                          ? "Processando..."
+                          : invoice.status === "Aberta"
+                            ? "Fechar nota"
+                            : "Imprimir nota"
+                      }}
+                    </button>
+                  </td>
+                </tr>
+                @if (expandedInvoiceNumber === invoice.number) {
+                  <tr class="invoice-details">
+                    <td colspan="4">
+                      <h3>Itens da nota #{{ invoice.number }}</h3>
+                      <table>
+                        <tr>
+                          <th>Produto</th>
+                          <th>Quantidade</th>
+                        </tr>
+                        @for (item of invoice.items; track item.productId) {
+                          <tr>
+                            <td>{{ productName(item.productId) }}</td>
+                            <td>{{ item.quantity }}</td>
+                          </tr>
+                        }
+                      </table>
+                    </td>
+                  </tr>
+                }
+              }
+            </table>
+            @if (invoiceTotal) {
+              <nav class="pagination" aria-label="Paginação das notas">
+                <button
+                  mat-stroked-button
+                  type="button"
+                  [disabled]="invoicePage === 1"
+                  (click)="changeInvoicePage(invoicePage - 1)"
+                >
+                  Anterior</button
+                ><span
+                  >Página {{ invoicePage }} de {{ invoiceTotalPages }} ·
+                  {{ invoiceTotal }} notas</span
+                ><button
+                  mat-stroked-button
+                  type="button"
+                  [disabled]="invoicePage === invoiceTotalPages"
+                  (click)="changeInvoicePage(invoicePage + 1)"
+                >
+                  Próxima
+                </button>
+              </nav>
+            } @else {
+              <p class="empty">Nenhuma nota fiscal cadastrada.</p>
+            }
+          </mat-card-content></mat-card
+        >
       }
     }
   }
-  @if(message) { <aside [class.success]="notificationKind === 'success'" [class.error]="notificationKind === 'error'" [attr.role]="notificationKind === 'error' ? 'alert' : 'status'"><span>{{message}}</span><button mat-button type="button" aria-label="Fechar aviso" (click)="message = ''">Fechar</button></aside> }
+  @if (message) {
+    <aside
+      [class.success]="notificationKind === 'success'"
+      [class.error]="notificationKind === 'error'"
+      [attr.role]="notificationKind === 'error' ? 'alert' : 'status'"
+    >
+      <span>{{ message }}</span
+      ><button
+        mat-button
+        type="button"
+        aria-label="Fechar aviso"
+        (click)="message = ''"
+      >
+        Fechar
+      </button>
+    </aside>
+  }
 </main>
 
-@if (closingError) { <div class="modal-backdrop" role="presentation"><mat-card class="modal" role="alertdialog" aria-modal="true" aria-labelledby="closing-error-title"><mat-card-header><mat-card-title id="closing-error-title">Não foi possível fechar a nota</mat-card-title></mat-card-header><mat-card-content><p>{{ closingError }}</p></mat-card-content><mat-card-actions align="end"><button mat-flat-button color="primary" type="button" (click)="closingError = ''">Ok</button></mat-card-actions></mat-card></div> }
+@if (closingError) {
+  <div class="modal-backdrop" role="presentation">
+    <mat-card
+      class="modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="closing-error-title"
+      ><mat-card-header
+        ><mat-card-title id="closing-error-title"
+          >Não foi possível fechar a nota</mat-card-title
+        ></mat-card-header
+      ><mat-card-content
+        ><p>{{ closingError }}</p></mat-card-content
+      ><mat-card-actions align="end"
+        ><button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="closingError = ''"
+        >
+          Ok
+        </button></mat-card-actions
+      ></mat-card
+    >
+  </div>
+}

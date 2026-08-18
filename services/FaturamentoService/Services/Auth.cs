@@ -1,6 +1,7 @@
 using FaturamentoService.Data;
 using Microsoft.EntityFrameworkCore;
 namespace FaturamentoService.Services;
+
 public static class Auth
 {
     public static string? GetToken(HttpRequest request)

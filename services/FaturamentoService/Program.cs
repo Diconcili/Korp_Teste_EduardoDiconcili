@@ -116,12 +116,12 @@ app.MapDelete("/api/auth/session", async (HttpRequest request, BillingDb db) =>
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
-app.MapGet("/api/invoices", async (HttpRequest request, BillingDb db, CryptoService crypto) =>
+app.MapGet("/api/invoices", async (HttpRequest request, BillingDb db, InvoiceService invoices, int? page, int? pageSize) =>
 {
     if (!await Auth.Valid(request, db)) return Results.Unauthorized();
-    var invoices = (await db.Invoices.OrderByDescending(item => item.Number).ToListAsync())
-        .Select(item => crypto.Decrypt<InvoiceView>(item.EncryptedPayload)!);
-    return Results.Ok(invoices);
+    var requestedPage = Math.Max(1, page ?? 1);
+    var requestedPageSize = Math.Clamp(pageSize ?? 10, 1, 50);
+    return Results.Ok(await invoices.ListAsync(requestedPage, requestedPageSize));
 });
 app.MapPost("/api/invoices", async (CreateInvoice? input, BillingDb db, InvoiceService invoices, HttpRequest request) =>
 {

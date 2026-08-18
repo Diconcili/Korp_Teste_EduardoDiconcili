@@ -26,7 +26,7 @@ public class InventoryService(StockDb db)
 
             var product = await db.Products.AsNoTracking().SingleOrDefaultAsync(product => product.Id == item.ProductId);
             await transaction.RollbackAsync();
-                return new(false, product is null ? $"Produto {item.ProductId} não encontrado." : $"Estoque insuficiente para {product.Description}.");
+            return new(false, product is null ? $"Produto {item.ProductId} não encontrado." : $"Estoque insuficiente para {product.Description}.");
         }
         if (!string.IsNullOrWhiteSpace(operationId))
         {

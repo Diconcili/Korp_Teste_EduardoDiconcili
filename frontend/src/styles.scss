@@ -1,6 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
-@import '@angular/material/prebuilt-themes/azure-blue.css';
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+@import "@angular/material/prebuilt-themes/azure-blue.css";
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
 
 :root {
   --mat-sys-primary: #2b4859;
@@ -29,25 +29,31 @@
   --mat-sys-outline: #98a6ae;
   --mat-sys-outline-variant: #dce5ea;
   --mat-sys-surface-tint: #2b4859;
-  --mat-sys-body-large-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-body-medium-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-body-small-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-display-large-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-display-medium-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-display-small-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-headline-large-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-headline-medium-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-headline-small-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-label-large-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-label-medium-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-label-small-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-title-large-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-title-medium-font: 'Manrope', Arial, sans-serif;
-  --mat-sys-title-small-font: 'Manrope', Arial, sans-serif;
+  --mat-sys-body-large-font: "Manrope", Arial, sans-serif;
+  --mat-sys-body-medium-font: "Manrope", Arial, sans-serif;
+  --mat-sys-body-small-font: "Manrope", Arial, sans-serif;
+  --mat-sys-display-large-font: "Manrope", Arial, sans-serif;
+  --mat-sys-display-medium-font: "Manrope", Arial, sans-serif;
+  --mat-sys-display-small-font: "Manrope", Arial, sans-serif;
+  --mat-sys-headline-large-font: "Manrope", Arial, sans-serif;
+  --mat-sys-headline-medium-font: "Manrope", Arial, sans-serif;
+  --mat-sys-headline-small-font: "Manrope", Arial, sans-serif;
+  --mat-sys-label-large-font: "Manrope", Arial, sans-serif;
+  --mat-sys-label-medium-font: "Manrope", Arial, sans-serif;
+  --mat-sys-label-small-font: "Manrope", Arial, sans-serif;
+  --mat-sys-title-large-font: "Manrope", Arial, sans-serif;
+  --mat-sys-title-medium-font: "Manrope", Arial, sans-serif;
+  --mat-sys-title-small-font: "Manrope", Arial, sans-serif;
 }
 
-html, body {
-  font-family: 'Manrope', Arial, sans-serif;
+html,
+body {
+  font-family: "Manrope", Arial, sans-serif;
 }
 
-html, body { min-height: 100%; margin: 0; background: #203744; }
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #203744;
+}
