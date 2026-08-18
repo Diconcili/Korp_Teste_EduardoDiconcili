@@ -52,9 +52,20 @@ Depois, abra três terminais na raiz do projeto.
 Gere as três chaves e copie os valores exibidos. Cada chave deve ser mantida em segredo e ter um valor diferente:
 
 ```powershell
-$authKey = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
-$stockKey = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
-$encryptionKey = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+function New-RandomKey {
+    $bytes = New-Object byte[] 32
+    $generator = [Security.Cryptography.RandomNumberGenerator]::Create()
+    try {
+        $generator.GetBytes($bytes)
+        [Convert]::ToBase64String($bytes)
+    }
+    finally {
+        $generator.Dispose()
+    }
+}
+$authKey = New-RandomKey
+$stockKey = New-RandomKey
+$encryptionKey = New-RandomKey
 $authKey
 $stockKey
 $encryptionKey
@@ -67,7 +78,14 @@ Para um banco novo, gere também um segredo Base32 para o primeiro administrador
 ```powershell
 function New-Base32Secret {
     $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
-    $bytes = [Security.Cryptography.RandomNumberGenerator]::GetBytes(20)
+    $bytes = New-Object byte[] 20
+    $generator = [Security.Cryptography.RandomNumberGenerator]::Create()
+    try {
+        $generator.GetBytes($bytes)
+    }
+    finally {
+        $generator.Dispose()
+    }
     $buffer = 0
     $bits = 0
     $result = ''
