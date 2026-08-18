@@ -9,10 +9,10 @@ Directory.CreateDirectory(dataDirectory);
 var databasePath = Path.Combine(dataDirectory, "estoque.db");
 var legacyDatabasePath = Path.Combine(builder.Environment.ContentRootPath, "estoque.db");
 if (!File.Exists(databasePath) && File.Exists(legacyDatabasePath)) File.Move(legacyDatabasePath, databasePath);
-var authSigningSecret = Environment.GetEnvironmentVariable("KORP_AUTH_SIGNING_KEY");
+var authSigningSecret = builder.Configuration["KORP_AUTH_SIGNING_KEY"];
 if (string.IsNullOrWhiteSpace(authSigningSecret) || authSigningSecret.Length < 32)
     throw new InvalidOperationException("Defina KORP_AUTH_SIGNING_KEY com ao menos 32 caracteres nos dois serviços.");
-var stockServiceKey = Environment.GetEnvironmentVariable("KORP_STOCK_SERVICE_KEY");
+var stockServiceKey = builder.Configuration["KORP_STOCK_SERVICE_KEY"];
 if (string.IsNullOrWhiteSpace(stockServiceKey) || stockServiceKey.Length < 32)
     throw new InvalidOperationException("Defina KORP_STOCK_SERVICE_KEY com ao menos 32 caracteres nos dois serviços.");
 

@@ -9,6 +9,7 @@ public class BillingDb(DbContextOptions<BillingDb> options) : DbContext(options)
     public DbSet<MfaChallenge> Challenges => Set<MfaChallenge>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<StockRecoveryJob> StockRecoveryJobs => Set<StockRecoveryJob>();
+    public DbSet<InvoiceProduct> InvoiceProducts => Set<InvoiceProduct>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -17,5 +18,7 @@ public class BillingDb(DbContextOptions<BillingDb> options) : DbContext(options)
         builder.Entity<User>().HasIndex(user => user.Username).IsUnique();
         builder.Entity<Session>().HasIndex(session => session.Token).IsUnique();
         builder.Entity<StockRecoveryJob>().HasIndex(job => job.InvoiceNumber).IsUnique();
+        builder.Entity<InvoiceProduct>().HasKey(item => new { item.InvoiceNumber, item.ProductId });
+        builder.Entity<InvoiceProduct>().HasIndex(item => item.ProductId);
     }
 }

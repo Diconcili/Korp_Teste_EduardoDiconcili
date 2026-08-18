@@ -20,6 +20,12 @@ export interface PagedResult<T> {
   page: number;
   pageSize: number;
 }
+export interface InvoiceFilters {
+  status: 'Todos' | 'Aberta' | 'Fechada';
+  sortBy: 'number' | 'date';
+  sortDirection: 'asc' | 'desc';
+  productId: number | null;
+}
 export interface LoginChallenge {
   challenge: string;
   expiresInSeconds: number;

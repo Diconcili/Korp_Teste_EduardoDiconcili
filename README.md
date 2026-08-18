@@ -9,6 +9,7 @@ Aplicação full stack para cadastro de produtos, criação de notas fiscais e c
 - Prevenção de códigos ou descrições duplicados com dados divergentes.
 - Criação de notas abertas com múltiplos itens.
 - Consulta paginada de notas, com até 50 registros por requisição.
+- Filtros de notas por status e produto, com ordenação por data ou número.
 - Fechamento de notas com baixa atômica de estoque, sem permitir saldo negativo.
 - Consulta expansível dos itens de cada nota e impressão pelo navegador após o fechamento.
 - Retentativas automáticas com backoff quando o serviço de estoque estiver indisponível.
@@ -105,31 +106,41 @@ $totpSecret
 
 Copie esse valor para o aplicativo autenticador e para `KORP_BOOTSTRAP_ADMIN_TOTP_SECRET`.
 
-### 2. EstoqueService
+### 2. Salvar os segredos localmente
+
+O projeto usa o Secret Manager do .NET em `Development`. Configure os valores uma única vez; eles ficam fora do repositório e serão carregados automaticamente nas próximas execuções.
 
 ```powershell
-$env:KORP_AUTH_SIGNING_KEY = '<valor de authKey>'
-$env:KORP_STOCK_SERVICE_KEY = '<valor de stockKey>'
+dotnet user-secrets set "KORP_AUTH_SIGNING_KEY" "<valor de authKey>" --project services/EstoqueService
+dotnet user-secrets set "KORP_STOCK_SERVICE_KEY" "<valor de stockKey>" --project services/EstoqueService
+
+dotnet user-secrets set "KORP_ENCRYPTION_KEY" "<valor de encryptionKey>" --project services/FaturamentoService
+dotnet user-secrets set "KORP_AUTH_SIGNING_KEY" "<mesmo valor de authKey>" --project services/FaturamentoService
+dotnet user-secrets set "KORP_STOCK_SERVICE_KEY" "<mesmo valor de stockKey>" --project services/FaturamentoService
+dotnet user-secrets set "KORP_BOOTSTRAP_ADMIN_USERNAME" "<usuário administrador inicial>" --project services/FaturamentoService
+dotnet user-secrets set "KORP_BOOTSTRAP_ADMIN_PASSWORD" "<senha inicial com ao menos 12 caracteres>" --project services/FaturamentoService
+dotnet user-secrets set "KORP_BOOTSTRAP_ADMIN_TOTP_SECRET" "<valor de totpSecret>" --project services/FaturamentoService
+```
+
+Não é necessário executar `dotnet user-secrets init`, pois os dois projetos já possuem identificadores próprios. Variáveis de ambiente com os mesmos nomes continuam aceitas e têm precedência sobre o Secret Manager.
+
+### 3. EstoqueService
+
+```powershell
 dotnet run --project services/EstoqueService --urls http://localhost:5101
 ```
 
-### 3. FaturamentoService
+### 4. FaturamentoService
 
 Em um banco novo, informe também os dados do primeiro administrador. O segredo TOTP deve ser Base32, ter ao menos 16 caracteres e estar cadastrado no aplicativo autenticador do usuário.
 
 ```powershell
-$env:KORP_ENCRYPTION_KEY = '<valor de encryptionKey>'
-$env:KORP_AUTH_SIGNING_KEY = '<mesmo valor de authKey>'
-$env:KORP_STOCK_SERVICE_KEY = '<mesmo valor de stockKey>'
-$env:KORP_BOOTSTRAP_ADMIN_USERNAME = '<usuário administrador inicial>'
-$env:KORP_BOOTSTRAP_ADMIN_PASSWORD = '<senha inicial com ao menos 12 caracteres>'
-$env:KORP_BOOTSTRAP_ADMIN_TOTP_SECRET = '<valor de totpSecret>'
 dotnet run --project services/FaturamentoService --urls http://localhost:5102
 ```
 
 Se `data/faturamento.db` já possuir um usuário, as três variáveis `KORP_BOOTSTRAP_ADMIN_*` podem ser omitidas. Elas não substituem nem alteram contas existentes.
 
-### 4. Frontend
+### 5. Frontend
 
 ```powershell
 pnpm --dir frontend start
@@ -176,6 +187,8 @@ A suíte usa bancos SQLite temporários e cobre:
 - Concorrência na disputa pela última unidade;
 - Idempotência na criação de notas;
 - Paginação das notas em ordem decrescente;
+- Filtros combinados e normalização de páginas fora do intervalo;
+- Atualização dos metadados de consulta em bancos criados por versões anteriores;
 - Indisponibilidade do EstoqueService e agendamento de recuperação;
 - Idempotência da baixa de estoque;
 - Rejeição de consumo sem itens;

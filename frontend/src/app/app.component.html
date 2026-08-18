@@ -273,11 +273,66 @@
               >Clique em uma nota para visualizar seus itens.</mat-card-subtitle
             ></mat-card-header
           ><mat-card-content>
+            <div class="invoice-filters" aria-label="Filtros das notas fiscais">
+              <mat-form-field appearance="outline">
+                <mat-label>Ordenar por</mat-label>
+                <mat-select
+                  [(ngModel)]="invoiceFilters.sortBy"
+                  (selectionChange)="applyInvoiceFilters()"
+                >
+                  <mat-option value="date">Data</mat-option>
+                  <mat-option value="number">Número</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Status</mat-label>
+                <mat-select
+                  [(ngModel)]="invoiceFilters.status"
+                  (selectionChange)="applyInvoiceFilters()"
+                >
+                  <mat-option value="Todos">Ambos</mat-option>
+                  <mat-option value="Aberta">Aberta</mat-option>
+                  <mat-option value="Fechada">Fechada</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Direção</mat-label>
+                <mat-select
+                  [(ngModel)]="invoiceFilters.sortDirection"
+                  (selectionChange)="applyInvoiceFilters()"
+                >
+                  <mat-option value="desc">Decrescente</mat-option>
+                  <mat-option value="asc">Crescente</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Produto incluído</mat-label>
+                <mat-select
+                  [(ngModel)]="invoiceFilters.productId"
+                  (selectionChange)="applyInvoiceFilters()"
+                >
+                  <mat-option [value]="null">Todos os produtos</mat-option>
+                  @for (product of products; track product.id) {
+                    <mat-option [value]="product.id">{{
+                      product.description
+                    }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="clearInvoiceFilters()"
+              >
+                Limpar filtros
+              </button>
+            </div>
             <table>
               <tr>
                 <th>Número</th>
                 <th>Status</th>
                 <th>Itens</th>
+                <th>Data</th>
                 <th>Ação</th>
               </tr>
               @for (invoice of invoices; track invoice.number) {
@@ -297,6 +352,7 @@
                     >
                   </td>
                   <td>{{ invoice.items.length }}</td>
+                  <td>{{ formatInvoiceDate(invoice.createdAt) }}</td>
                   <td>
                     <button
                       mat-stroked-button
@@ -316,7 +372,7 @@
                 </tr>
                 @if (expandedInvoiceNumber === invoice.number) {
                   <tr class="invoice-details">
-                    <td colspan="4">
+                    <td colspan="5">
                       <h3>Itens da nota #{{ invoice.number }}</h3>
                       <table>
                         <tr>

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AuthSessionService } from './auth-session.service';
-import { Invoice, InvoiceItem, PagedResult } from './models';
+import { Invoice, InvoiceFilters, InvoiceItem, PagedResult } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class InvoiceApiService {
@@ -10,9 +10,17 @@ export class InvoiceApiService {
     private http: HttpClient,
     private auth: AuthSessionService,
   ) {}
-  list(page: number, pageSize: number) {
+  list(page: number, pageSize: number, filters: InvoiceFilters) {
+    const params: Record<string, string | number> = {
+      page,
+      pageSize,
+      sortBy: filters.sortBy,
+      sortDirection: filters.sortDirection,
+    };
+    if (filters.status !== 'Todos') params['status'] = filters.status;
+    if (filters.productId) params['productId'] = filters.productId;
     return this.http.get<PagedResult<Invoice>>(`${this.api}/invoices`, {
-      params: { page, pageSize },
+      params,
       headers: this.auth.headers(),
     });
   }

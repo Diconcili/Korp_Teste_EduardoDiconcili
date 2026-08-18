@@ -12,18 +12,18 @@ Directory.CreateDirectory(dataDirectory);
 var databasePath = Path.Combine(dataDirectory, "faturamento.db");
 var legacyDatabasePath = Path.Combine(builder.Environment.ContentRootPath, "faturamento.db");
 if (!File.Exists(databasePath) && File.Exists(legacyDatabasePath)) File.Move(legacyDatabasePath, databasePath);
-var encryptionSecret = Environment.GetEnvironmentVariable("KORP_ENCRYPTION_KEY");
+var encryptionSecret = builder.Configuration["KORP_ENCRYPTION_KEY"];
 if (string.IsNullOrWhiteSpace(encryptionSecret) || encryptionSecret.Length < 32)
     throw new InvalidOperationException("Defina KORP_ENCRYPTION_KEY com ao menos 32 caracteres antes de iniciar o FaturamentoService.");
-var authSigningSecret = Environment.GetEnvironmentVariable("KORP_AUTH_SIGNING_KEY");
+var authSigningSecret = builder.Configuration["KORP_AUTH_SIGNING_KEY"];
 if (string.IsNullOrWhiteSpace(authSigningSecret) || authSigningSecret.Length < 32)
     throw new InvalidOperationException("Defina KORP_AUTH_SIGNING_KEY com ao menos 32 caracteres nos dois serviços.");
-var stockServiceKey = Environment.GetEnvironmentVariable("KORP_STOCK_SERVICE_KEY");
+var stockServiceKey = builder.Configuration["KORP_STOCK_SERVICE_KEY"];
 if (string.IsNullOrWhiteSpace(stockServiceKey) || stockServiceKey.Length < 32)
     throw new InvalidOperationException("Defina KORP_STOCK_SERVICE_KEY com ao menos 32 caracteres nos dois serviços.");
-var bootstrapUsername = Environment.GetEnvironmentVariable("KORP_BOOTSTRAP_ADMIN_USERNAME")?.Trim();
-var bootstrapPassword = Environment.GetEnvironmentVariable("KORP_BOOTSTRAP_ADMIN_PASSWORD");
-var bootstrapTotpSecret = Environment.GetEnvironmentVariable("KORP_BOOTSTRAP_ADMIN_TOTP_SECRET")?.Trim();
+var bootstrapUsername = builder.Configuration["KORP_BOOTSTRAP_ADMIN_USERNAME"]?.Trim();
+var bootstrapPassword = builder.Configuration["KORP_BOOTSTRAP_ADMIN_PASSWORD"];
+var bootstrapTotpSecret = builder.Configuration["KORP_BOOTSTRAP_ADMIN_TOTP_SECRET"]?.Trim();
 
 builder.Services.AddDbContext<BillingDb>(options => options.UseSqlite($"Data Source={databasePath}"));
 builder.Services.AddHttpClient("stock", client =>
@@ -53,9 +53,8 @@ app.UseRateLimiter();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BillingDb>();
-    await db.Database.EnsureCreatedAsync();
-    await db.Database.ExecuteSqlRawAsync("CREATE TABLE IF NOT EXISTS StockRecoveryJobs (Id INTEGER NOT NULL CONSTRAINT PK_StockRecoveryJobs PRIMARY KEY AUTOINCREMENT, InvoiceNumber INTEGER NOT NULL, AttemptCount INTEGER NOT NULL, NextAttemptAt TEXT NOT NULL, LastError TEXT NOT NULL, CreatedAt TEXT NOT NULL)");
-    await db.Database.ExecuteSqlRawAsync("CREATE UNIQUE INDEX IF NOT EXISTS IX_StockRecoveryJobs_InvoiceNumber ON StockRecoveryJobs (InvoiceNumber)");
+    var crypto = scope.ServiceProvider.GetRequiredService<CryptoService>();
+    await BillingDatabaseInitializer.InitializeAsync(db, crypto);
     if (!await db.Users.AnyAsync())
     {
         if (string.IsNullOrWhiteSpace(bootstrapUsername) || string.IsNullOrWhiteSpace(bootstrapPassword) || bootstrapPassword.Length < 12 || !Totp.IsValidSecret(bootstrapTotpSecret))
@@ -116,12 +115,11 @@ app.MapDelete("/api/auth/session", async (HttpRequest request, BillingDb db) =>
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
-app.MapGet("/api/invoices", async (HttpRequest request, BillingDb db, InvoiceService invoices, int? page, int? pageSize) =>
+app.MapGet("/api/invoices", async (HttpRequest request, BillingDb db, InvoiceService invoices, [AsParameters] InvoiceQuery query) =>
 {
     if (!await Auth.Valid(request, db)) return Results.Unauthorized();
-    var requestedPage = Math.Max(1, page ?? 1);
-    var requestedPageSize = Math.Clamp(pageSize ?? 10, 1, 50);
-    return Results.Ok(await invoices.ListAsync(requestedPage, requestedPageSize));
+    if (!query.IsValid) return Results.BadRequest(new { message = "Filtros de notas fiscais inválidos." });
+    return Results.Ok(await invoices.ListAsync(query));
 });
 app.MapPost("/api/invoices", async (CreateInvoice? input, BillingDb db, InvoiceService invoices, HttpRequest request) =>
 {

@@ -10,7 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { AuthSessionService } from './auth-session.service';
 import { InvoiceApiService } from './invoice-api.service';
 import { InvoicePrinterService } from './invoice-printer.service';
-import { Invoice, InvoiceItem, Product } from './models';
+import { Invoice, InvoiceFilters, InvoiceItem, Product } from './models';
 import { StockApiService } from './stock-api.service';
 
 @Component({
@@ -49,6 +49,12 @@ export class AppComponent implements OnInit {
   invoicePage = 1;
   readonly invoicePageSize = 10;
   invoiceTotal = 0;
+  invoiceFilters: InvoiceFilters = {
+    status: 'Todos',
+    sortBy: 'date',
+    sortDirection: 'desc',
+    productId: null,
+  };
   activePanel: 'menu' | 'products' | 'new-invoice' | 'invoices' = 'menu';
   private notificationTimer?: ReturnType<typeof setTimeout>;
 
@@ -250,21 +256,43 @@ export class AppComponent implements OnInit {
   }
 
   loadInvoices(page = this.invoicePage) {
-    this.invoiceApi.list(page, this.invoicePageSize).subscribe({
-      next: (result) => {
-        this.invoices = result.items;
-        this.invoiceTotal = result.total;
-        this.invoicePage = result.page;
-        this.expandedInvoiceNumber = null;
-      },
-      error: (error) => {
-        if (!this.handleUnauthorized(error))
-          this.notify(
-            'Não foi possível carregar as notas fiscais. Verifique se o serviço de faturamento está ativo.',
-            'error',
-          );
-      },
-    });
+    this.invoiceApi
+      .list(page, this.invoicePageSize, {
+        ...this.invoiceFilters,
+      })
+      .subscribe({
+        next: (result) => {
+          this.invoices = result.items;
+          this.invoiceTotal = result.total;
+          this.invoicePage = result.page;
+          this.expandedInvoiceNumber = null;
+        },
+        error: (error) => {
+          if (!this.handleUnauthorized(error))
+            this.notify(
+              'Não foi possível carregar as notas fiscais. Verifique se o serviço de faturamento está ativo.',
+              'error',
+            );
+        },
+      });
+  }
+
+  applyInvoiceFilters() {
+    this.loadInvoices(1);
+  }
+
+  clearInvoiceFilters() {
+    this.invoiceFilters = {
+      status: 'Todos',
+      sortBy: 'date',
+      sortDirection: 'desc',
+      productId: null,
+    };
+    this.loadInvoices(1);
+  }
+
+  formatInvoiceDate(value: string) {
+    return new Date(value).toLocaleString('pt-BR');
   }
 
   changeInvoicePage(page: number) {

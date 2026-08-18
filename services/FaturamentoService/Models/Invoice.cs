@@ -5,6 +5,7 @@ public class Invoice
     public int Id { get; set; }
     public int Number { get; set; }
     public string Status { get; set; } = "";
+    public DateTime CreatedAt { get; set; }
     public string EncryptedPayload { get; set; } = "";
     public string IdempotencyKey { get; set; } = "";
 }

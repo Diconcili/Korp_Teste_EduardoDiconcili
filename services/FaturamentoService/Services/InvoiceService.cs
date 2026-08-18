@@ -6,13 +6,26 @@ namespace FaturamentoService.Services;
 
 public class InvoiceService(BillingDb db, CryptoService crypto, IHttpClientFactory httpClientFactory)
 {
-    public async Task<PagedResult<InvoiceView>> ListAsync(int page, int pageSize)
+    public async Task<PagedResult<InvoiceView>> ListAsync(InvoiceQuery request)
     {
-        var total = await db.Invoices.CountAsync();
-        var payloads = await db.Invoices.AsNoTracking()
-            .OrderByDescending(invoice => invoice.Number)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+        var query = db.Invoices.AsNoTracking().AsQueryable();
+        if (request.Status is not null) query = query.Where(invoice => invoice.Status == request.Status);
+        if (request.ProductId is int productId)
+            query = query.Where(invoice => db.InvoiceProducts.Any(item => item.InvoiceNumber == invoice.Number && item.ProductId == productId));
+
+        query = (request.SortBy, request.SortDirection) switch
+        {
+            ("number", "asc") => query.OrderBy(invoice => invoice.Number),
+            ("number", _) => query.OrderByDescending(invoice => invoice.Number),
+            ("date", "asc") => query.OrderBy(invoice => invoice.CreatedAt).ThenBy(invoice => invoice.Number),
+            _ => query.OrderByDescending(invoice => invoice.CreatedAt).ThenByDescending(invoice => invoice.Number)
+        };
+
+        var total = await query.CountAsync();
+        var pageSize = Math.Clamp(request.PageSize, 1, 50);
+        var totalPages = Math.Max(1, (int)Math.Ceiling(total / (double)pageSize));
+        var page = Math.Clamp(request.Page, 1, totalPages);
+        var payloads = await query.Skip((page - 1) * pageSize).Take(pageSize)
             .Select(invoice => invoice.EncryptedPayload)
             .ToListAsync();
         var items = payloads.Select(payload => crypto.Decrypt<InvoiceView>(payload)!).ToList();
@@ -31,7 +44,8 @@ public class InvoiceService(BillingDb db, CryptoService crypto, IHttpClientFacto
         {
             var number = (await db.Invoices.MaxAsync(invoice => (int?)invoice.Number) ?? 0) + 1;
             var view = new InvoiceView(number, "Aberta", items, DateTime.UtcNow);
-            db.Invoices.Add(new Invoice { Number = number, Status = "Aberta", EncryptedPayload = crypto.Encrypt(view), IdempotencyKey = key });
+            db.Invoices.Add(new Invoice { Number = number, Status = "Aberta", CreatedAt = view.CreatedAt, EncryptedPayload = crypto.Encrypt(view), IdempotencyKey = key });
+            db.InvoiceProducts.AddRange(items.Select(item => item.ProductId).Distinct().Select(productId => new InvoiceProduct { InvoiceNumber = number, ProductId = productId }));
             try
             {
                 await db.SaveChangesAsync();
