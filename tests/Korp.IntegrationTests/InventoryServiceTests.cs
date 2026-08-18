@@ -52,6 +52,18 @@ public class InventoryServiceTests
         Assert.Equal(1, await db.StockConsumptions.CountAsync());
     }
 
+    [Fact]
+    public async Task ConsumeAsync_WithoutItems_ReturnsValidationFailure()
+    {
+        using var database = await CreateDatabaseAsync(1);
+        await using var db = new StockDb(database.Options);
+
+        var result = await new InventoryService(db).ConsumeAsync(new ConsumeStock(null));
+
+        Assert.False(result.Success);
+        Assert.Equal("Itens de estoque inválidos.", result.Message);
+    }
+
     static async Task<TestStockDatabase> CreateDatabaseAsync(int balance)
     {
         var path = Path.Combine(Path.GetTempPath(), $"korp-stock-{Guid.NewGuid():N}.db");

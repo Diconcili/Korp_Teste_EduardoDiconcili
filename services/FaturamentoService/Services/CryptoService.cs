@@ -16,6 +16,7 @@ public class CryptoService
 
     public string Encrypt<T>(T value)
     {
+        // Cada payload usa um nonce exclusivo no AES-GCM.
         var nonce = RandomNumberGenerator.GetBytes(12);
         var plain = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(value));
         var cipher = new byte[plain.Length];

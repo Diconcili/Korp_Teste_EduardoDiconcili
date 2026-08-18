@@ -8,14 +8,16 @@ public class InvoiceService(BillingDb db, CryptoService crypto, IHttpClientFacto
 {
     public async Task<InvoiceCreationResult> CreateAsync(CreateInvoice input)
     {
+        var items = input.Items ?? throw new ArgumentException("A nota deve possuir itens.", nameof(input));
         var key = input.IdempotencyKey ?? Guid.NewGuid().ToString();
+        // Repetir a mesma requisição devolve a nota já criada.
         var existing = await db.Invoices.SingleOrDefaultAsync(invoice => invoice.IdempotencyKey == key);
         if (existing is not null) return new(crypto.Decrypt<InvoiceView>(existing.EncryptedPayload)!, false);
 
         for (var attempt = 0; attempt < 3; attempt++)
         {
             var number = (await db.Invoices.MaxAsync(invoice => (int?)invoice.Number) ?? 0) + 1;
-            var view = new InvoiceView(number, "Aberta", input.Items, DateTime.UtcNow);
+            var view = new InvoiceView(number, "Aberta", items, DateTime.UtcNow);
             db.Invoices.Add(new Invoice { Number = number, Status = "Aberta", EncryptedPayload = crypto.Encrypt(view), IdempotencyKey = key });
             try
             {
@@ -41,6 +43,7 @@ public class InvoiceService(BillingDb db, CryptoService crypto, IHttpClientFacto
 
         try
         {
+            // O identificador torna a baixa segura durante retentativas.
             var response = await httpClientFactory.CreateClient("stock").PostAsJsonAsync("/api/stock/consume", new { items = view.Items, operationId = $"invoice-{number}" });
             if (!response.IsSuccessStatusCode)
             {
@@ -85,6 +88,7 @@ public class InvoiceService(BillingDb db, CryptoService crypto, IHttpClientFacto
         }
         job.AttemptCount++;
         job.LastError = error;
+        // Backoff limitado evita sobrecarregar o serviço indisponível.
         var seconds = Math.Min(900, 15 * Math.Pow(2, Math.Min(job.AttemptCount - 1, 6)));
         job.NextAttemptAt = DateTime.UtcNow.AddSeconds(seconds);
         await db.SaveChangesAsync();

@@ -13,7 +13,6 @@
         @if (challenge) { <mat-form-field appearance="outline"><mat-label>Código do autenticador</mat-label><input matInput [(ngModel)]="code" inputmode="numeric"></mat-form-field> }
       </mat-card-content>
       <mat-card-actions align="end"><button mat-flat-button color="primary" (click)="challenge ? validateMfa() : login()">{{ challenge ? 'Validar MFA' : 'Continuar' }}</button></mat-card-actions>
-      <mat-card-footer><small>Ambiente inicial: admin / Temp123!</small></mat-card-footer>
     </mat-card>
   } @else {
     @if (activePanel === 'menu') {

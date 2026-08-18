@@ -36,9 +36,20 @@ Os bancos ficam em `data/estoque.db` e `data/faturamento.db`. Eles são dados lo
 
 Abra três terminais na raiz do projeto.
 
+Antes de iniciar, gere duas chaves e copie os valores exibidos. Os mesmos valores devem ser usados nos dois serviços:
+
+```powershell
+$authKey = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+$stockKey = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+$authKey
+$stockKey
+```
+
 ### 1. EstoqueService
 
 ```powershell
+$env:KORP_AUTH_SIGNING_KEY = '<valor de authKey>'
+$env:KORP_STOCK_SERVICE_KEY = '<valor de stockKey>'
 dotnet run --project services/EstoqueService --urls http://localhost:5101
 ```
 
@@ -52,6 +63,11 @@ $random = [Security.Cryptography.RandomNumberGenerator]::Create()
 $random.GetBytes($keyBytes)
 $random.Dispose()
 $env:KORP_ENCRYPTION_KEY = [Convert]::ToBase64String($keyBytes)
+$env:KORP_AUTH_SIGNING_KEY = '<mesmo valor de authKey>'
+$env:KORP_STOCK_SERVICE_KEY = '<mesmo valor de stockKey>'
+$env:KORP_BOOTSTRAP_ADMIN_USERNAME = '<usuário administrador inicial>'
+$env:KORP_BOOTSTRAP_ADMIN_PASSWORD = '<senha inicial com ao menos 12 caracteres>'
+$env:KORP_BOOTSTRAP_ADMIN_TOTP_SECRET = '<segredo Base32 exclusivo do autenticador>'
 dotnet run --project services/FaturamentoService --urls http://localhost:5102
 ```
 
@@ -63,9 +79,9 @@ pnpm --dir frontend start
 
 Abra `http://localhost:4200`.
 
-## Acesso de demonstração
+## Primeiro acesso
 
-O banco novo cria o usuário de demonstração `admin` com a senha `Temp123!`. O segundo fator usa TOTP e deve ser configurado apenas para testes locais. Realizar a troca de credenciais e o segredo TOTP para cada ambiente de testes diferente.
+Quando o banco ainda não possui usuários, o FaturamentoService cria o primeiro administrador usando as três variáveis `KORP_BOOTSTRAP_ADMIN_*`. A senha deve possuir ao menos 12 caracteres e o segredo TOTP deve ser um valor Base32 exclusivo configurado no aplicativo autenticador. Em bancos que já possuem usuários, essas variáveis não alteram as contas existentes.
 
 ## Testes automatizados
 
@@ -85,7 +101,10 @@ A suíte usa bancos SQLite temporários e cobre:
 
 ## Segurança e publicação
 
-- `KORP_ENCRYPTION_KEY` é obrigatória e não possui valor padrão no código.
+- `KORP_ENCRYPTION_KEY`, `KORP_AUTH_SIGNING_KEY` e `KORP_STOCK_SERVICE_KEY` são obrigatórias e não possuem valor padrão no código.
+- O EstoqueService valida sessões localmente e usa uma credencial separada para chamadas internas do FaturamentoService.
+- Login e MFA possuem limitação por origem; cinco falhas na mesma combinação de origem e usuário causam bloqueio temporário, e cinco falhas invalidam o desafio MFA.
+- Os serviços aceitam requisições do navegador somente das origens listadas em `AllowedOrigins`. Para outro endereço de frontend, configure por exemplo `AllowedOrigins__0` no ambiente dos dois serviços.
 
 ## Portas locais
 

@@ -8,15 +8,18 @@ public class InventoryService(StockDb db)
 {
     public async Task<StockConsumptionResult> ConsumeAsync(ConsumeStock request)
     {
+        if (request.Items is null) return new(false, "Itens de estoque inválidos.");
         var items = request.Items.GroupBy(item => item.ProductId).Select(group => new StockItem(group.Key, group.Sum(item => item.Quantity))).ToList();
         if (items.Count == 0 || items.Any(item => item.Quantity <= 0)) return new(false, "Itens de estoque inválidos.");
 
+        // Agrupa a baixa e o registro idempotente na mesma transação.
         await using var transaction = await db.Database.BeginTransactionAsync();
         var operationId = request.OperationId?.Trim();
         if (!string.IsNullOrWhiteSpace(operationId) && await db.StockConsumptions.AnyAsync(consumption => consumption.OperationId == operationId))
             return new(true, "Estoque já atualizado para esta nota.");
         foreach (var item in items)
         {
+            // A condição no UPDATE impede saldo negativo sob concorrência.
             var changed = await db.Products.Where(product => product.Id == item.ProductId && product.Balance >= item.Quantity)
                 .ExecuteUpdateAsync(update => update.SetProperty(product => product.Balance, product => product.Balance - item.Quantity));
             if (changed == 1) continue;
