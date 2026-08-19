@@ -159,6 +159,10 @@ O acesso ocorre em duas etapas:
 
 A sessão resultante expira após 30 minutos. O logout invalida a sessão no FaturamentoService, e dados locais inválidos ou expirados são descartados pelo frontend.
 
+### Redefinir o MFA em um clone local
+
+O segredo de bootstrap só é usado na criação do primeiro usuário. Depois disso, ele fica armazenado no banco; alterar `KORP_BOOTSTRAP_ADMIN_TOTP_SECRET` não altera o MFA de uma conta já criada. Se o autenticador tiver sido configurado com outro segredo, ou se for necessário reiniciar o acesso em um clone de desenvolvimento sem dados importantes, encerre o FaturamentoService e remova somente `data/faturamento.db` (e os arquivos `faturamento.db-wal` e `faturamento.db-shm`, se existirem). Na próxima inicialização, o serviço criará novamente o administrador usando os segredos atuais. Em seguida, exclua a entrada anterior do aplicativo autenticador e cadastre exatamente o valor atual de `KORP_BOOTSTRAP_ADMIN_TOTP_SECRET` como TOTP de 6 dígitos, SHA-1 e período de 30 segundos.
+
 ## Configuração
 
 | Variável | Serviço | Obrigatória | Finalidade |
